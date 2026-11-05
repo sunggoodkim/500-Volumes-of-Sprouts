@@ -122,40 +122,64 @@ function render(){
   const cntAge=a=>BOOKS.filter(b=>!a||b[4].includes(a+"세")).length;
   $("ages").innerHTML=[0,4,5,6,7].map(a=>`<button class="${a===age?"on":""}" data-a="${a}">${a?a+"세":"전체"} ${cntAge(a)}</button>`).join("");
   if(hasArea)$("areas").innerHTML=["",...AREAS].map(a=>`<button class="${a===area?"on":""}" data-z="${esc(a)}">${a||"모든 영역"}</button>`).join("");
-  const q=$("q").value.trim().toLowerCase(),hide=$("hide").checked;
-  const rows=[];
-  BOOKS.forEach((b,i)=>{
-    if(age&&!b[4].includes(age+"세"))return;
-    if(area&&b[5]!==area)return;
-    if(hide&&isRead(i))return;
-    const searchText = [
-    b[0], b[1], b[2], b[6],
-    ...(Array.isArray(b[7]) ? b[7] : [])
-    ].join(" ").toLowerCase();
+  const q=$("q").value.trim().toLowerCase();
+const hide=$("hide").checked;
+const rows=[];
 
-  if(q && !searchText.includes(q)) return;
-    rows.push(i);
-  });
-  $("shown").textContent=rows.length+"권 표시 중";
-  const recommendation=Array.isArray(b[6])?"":(b[6]||"");
-  const keywords=Array.isArray(b[7])?b[7]:(Array.isArray(b[6])?b[6]:[]);
+BOOKS.forEach((b,i)=>{
+  if(age&&!b[4].includes(age+"세"))return;
+  if(area&&b[5]!==area)return;
+  if(hide&&isRead(i))return;
 
-  return `<li class="${d?"done":""}">
-    <button type="button" data-i="${i}" aria-pressed="${d}">
-      <span class="cv" style="background:${COLORS[first]||"#eee"}">${esc(b[0].replace(/^[^0-9A-Za-z가-힣]+/,"").charAt(0))}</span>
-      <span class="tx">
-        <span class="t">${esc(b[0])}</span><br>
-        <span class="a">${esc(b[1])}${meta?" · "+esc(meta):""}</span><br>
-        ${b[4].map(a=>`<span class="tag">${esc(a)}</span>`).join("")}
-        ${b[5]?`<span class="tag">${esc(b[5])}</span>`:""}
-        ${recommendation?`<span class="tag">${esc(recommendation)}</span>`:""}
-        ${keywords.map(k=>`<span class="tag">${esc(k)}</span>`).join("")}
-        ${d&&read[i]&&read[i]!=="1"?`<span class="tag">${esc(read[i])} 읽음</span>`:""}
-      </span>
-      <span class="st">${d?"읽음":"누르기"}</span>
-    </button>
-  </li>`;
-}).join(""):`<li class="empty">표시할 책이 없어요 📭</li>`;
+  // 추천기관/수상작과 관련 키워드
+  const recommendation=typeof b[6]==="string"?b[6]:"";
+  const keywords=Array.isArray(b[7])
+    ?b[7]
+    :(Array.isArray(b[6])?b[6]:[]);
+
+  // 제목, 저자, 출판사, 누리과정, 추천기관, 키워드 통합 검색
+  const searchText=[
+    b[0],b[1],b[2],b[5],
+    recommendation,
+    ...keywords
+  ].join(" ").toLowerCase();
+
+  if(q&&!searchText.includes(q))return;
+
+  rows.push(i);
+});
+
+$("shown").textContent=rows.length+"권 표시 중";
+
+$("list").innerHTML=rows.length
+  ?rows.map(i=>{
+    const b=BOOKS[i];
+    const d=isRead(i);
+    const first=b[4][0]?parseInt(b[4][0]):5;
+    const meta=[b[2],b[3]].filter(Boolean).join(" · ");
+
+    const recommendation=typeof b[6]==="string"?b[6]:"";
+    const keywords=Array.isArray(b[7])
+      ?b[7]
+      :(Array.isArray(b[6])?b[6]:[]);
+
+    return `<li class="${d?"done":""}">
+      <button type="button" data-i="${i}" aria-pressed="${d}">
+        <span class="cv" style="background:${COLORS[first]||"#eee"}">${esc(b[0].replace(/^[^0-9A-Za-z가-힣]+/,"").charAt(0))}</span>
+        <span class="tx">
+          <span class="t">${esc(b[0])}</span><br>
+          <span class="a">${esc(b[1])}${meta?" · "+esc(meta):""}</span><br>
+          ${b[4].map(a=>`<span class="tag">${esc(a)}</span>`).join("")}
+          ${b[5]?`<span class="tag">${esc(b[5])}</span>`:""}
+          ${recommendation?`<span class="tag">${esc(recommendation)}</span>`:""}
+          ${keywords.map(k=>`<span class="tag">${esc(k)}</span>`).join("")}
+          ${d&&read[i]&&read[i]!=="1"?`<span class="tag">${esc(read[i])} 읽음</span>`:""}
+        </span>
+        <span class="st">${d?"읽음":"누르기"}</span>
+      </button>
+    </li>`;
+  }).join("")
+  :`<li class="empty">표시할 책이 없어요 📭</li>`;
 }
 $("ages").onclick=e=>{const b=e.target.closest("button");if(b){age=+b.dataset.a;render()}};
 $("areas").onclick=e=>{const b=e.target.closest("button");if(b){area=b.dataset.z;render()}};
