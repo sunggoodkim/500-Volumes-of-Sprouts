@@ -137,11 +137,25 @@ function render(){
     rows.push(i);
   });
   $("shown").textContent=rows.length+"권 표시 중";
-  $("list").innerHTML=rows.length?rows.map(i=>{
-    const b=BOOKS[i],d=isRead(i),first=b[4][0]?parseInt(b[4][0]):5;
-    const meta=[b[2],b[3]].filter(Boolean).join(" · ");
-    return `<li class="${d?"done":""}"><button type="button" data-i="${i}" aria-pressed="${d}"><span class="cv" style="background:${COLORS[first]||"#eee"}">${esc(b[0].replace(/^[^0-9A-Za-z가-힣]+/,"").charAt(0))}</span><span class="tx"><span class="t">${esc(b[0])}</span><br><span class="a">${esc(b[1])}${meta?" · "+esc(meta):""}</span><br>${b[4].map(a=>`<span class="tag">${esc(a)}</span>`).join("")}${b[5]?`<span class="tag">${esc(b[5])}</span>`:""}${d&&read[i]&&read[i]!=="1"?`<span class="tag">${esc(read[i])} 읽음</span>`:""}</span><span class="st">${d?"읽음":"누르기"}</span></button></li>`;
-  }).join(""):`<li class="empty">표시할 책이 없어요 📭</li>`;
+  const recommendation=Array.isArray(b[6])?"":(b[6]||"");
+  const keywords=Array.isArray(b[7])?b[7]:(Array.isArray(b[6])?b[6]:[]);
+
+  return `<li class="${d?"done":""}">
+    <button type="button" data-i="${i}" aria-pressed="${d}">
+      <span class="cv" style="background:${COLORS[first]||"#eee"}">${esc(b[0].replace(/^[^0-9A-Za-z가-힣]+/,"").charAt(0))}</span>
+      <span class="tx">
+        <span class="t">${esc(b[0])}</span><br>
+        <span class="a">${esc(b[1])}${meta?" · "+esc(meta):""}</span><br>
+        ${b[4].map(a=>`<span class="tag">${esc(a)}</span>`).join("")}
+        ${b[5]?`<span class="tag">${esc(b[5])}</span>`:""}
+        ${recommendation?`<span class="tag">${esc(recommendation)}</span>`:""}
+        ${keywords.map(k=>`<span class="tag">${esc(k)}</span>`).join("")}
+        ${d&&read[i]&&read[i]!=="1"?`<span class="tag">${esc(read[i])} 읽음</span>`:""}
+      </span>
+      <span class="st">${d?"읽음":"누르기"}</span>
+    </button>
+  </li>`;
+}).join(""):`<li class="empty">표시할 책이 없어요 📭</li>`;
 }
 $("ages").onclick=e=>{const b=e.target.closest("button");if(b){age=+b.dataset.a;render()}};
 $("areas").onclick=e=>{const b=e.target.closest("button");if(b){area=b.dataset.z;render()}};
